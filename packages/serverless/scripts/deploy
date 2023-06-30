@@ -2,11 +2,6 @@
 
 set -e
 
-# rm -f ./remote.zip
-# npm pack --workspace @movie-ratings/serverless
-
-# cd ./package && zip -r ../remote.zip . -x "*/.*"
-# cd ..
 cd dist;
 zip -r bundle.zip .
 aws lambda update-function-code --function-name myFunctionName --zip-file fileb://bundle.zip

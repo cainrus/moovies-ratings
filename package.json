@@ -10,9 +10,6 @@
     "dotenv-cli": "^7.2.1"
   },
   "scripts": {
-    "sync-from": "aws lambda get-function --function-name myFunctionName --query 'Code.Location' | xargs wget -O remote.zip && unzip remote.zip -d package",
-    "sync-to": "scripts/deploy.sh",
-    "test": "npm run test --workspace @movie-ratings/serverless",
-    "r": "npm pack --workspace @movie-ratings/serverless "
+    "test": "yarn workspace @movies-ratings/serverless test"
   }
 }

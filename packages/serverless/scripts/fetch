@@ -1,0 +1,5 @@
+#!/bin/sh
+
+set -e
+
+aws lambda get-function --function-name myFunctionName --query 'Code.Location' | xargs wget -O dist/bundle.zip && unzip dist/bundle.zip -d dist
