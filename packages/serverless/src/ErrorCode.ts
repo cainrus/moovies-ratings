@@ -1,0 +1,6 @@
+export enum ErrorCode {
+    CACHE_INIT_ERROR,
+    CACHE_READ_ERROR,
+    CACHE_WRITE_ERROR,
+    INVALID_API_RESPONSE,
+}

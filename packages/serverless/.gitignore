@@ -1,0 +1,4 @@
+.env.test
+*.rdb
+dist
+.env
