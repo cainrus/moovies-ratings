@@ -1,7 +1,6 @@
 document.addEventListener("DOMContentLoaded", async function () {
   const apiEndpoint = 'https://j1r5p36fi5.execute-api.eu-north-1.amazonaws.com/';
 
-  if (!document.querySelector(".nav.nav-top a")?.href.includes("index.php?c=2")) return;
   const colors = [
     "#460000",
     "#8B0000",
@@ -16,10 +15,8 @@ document.addEventListener("DOMContentLoaded", async function () {
     "#00468B"
   ];
 
-  const header = document.createElement('th');
-  header.innerText = "⭐";
-  header.title = 'TMDB Rating'
-  document.querySelector('th.vf-col-t-title').after(header)
+
+
 
   class IndexedDataBase {
     constructor(dbName = 'ratings', storeName = 'moovies', version = 1) {
@@ -102,12 +99,6 @@ document.addEventListener("DOMContentLoaded", async function () {
   const cachedRating = {};
   const callbackMapping = {};
 
-  function encodeText(text) {
-    let encoder = new TextEncoder();
-    let data = encoder.encode(text);
-    return btoa(String.fromCharCode(...new Uint8Array(data)));
-  }
-
   const getMovieData = async function (threadElement, movieKey, callback) {
     let storedRating = await indexedDataBase.get(movieKey);
 
@@ -156,19 +147,49 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
   };
 
-  const threadLinks = document.querySelectorAll("tr[id]:has(span.seedmed) .torTopic > .torTopic");
+  const url = new URL(location.href);
+  const isForum = url.pathname.startsWith('/forum/viewforum.php');
+  const isTracker = !isForum && url.pathname.startsWith('/forum/tracker.php');
+
+  let headerTh;
+  let threadLinks;
+
+  if (isForum) {
+    // Check parent forum is movies forum.
+    if (!document.querySelector(".nav.nav-top a")?.href.includes("index.php?c=2")) return;
+    headerTh = document.querySelector('th.vf-col-t-title');
+    threadLinks = document.querySelectorAll("tr[id]:has(span.seedmed) .torTopic > .torTopic");
+  } else if (isTracker) {
+    // Wait until forum is loaded.
+    // await new Promise(resolve => setTimeout(resolve, 2000));
+    headerTh = document.querySelector('.forumline th:nth-child(4)')
+    threadLinks = document.querySelectorAll('.tt-text');
+  }
+
+
+  const header = document.createElement('th');
+  header.innerText = "⭐";
+  header.title = 'TMDB Rating';
+  headerTh.after(header)
 
   document.querySelectorAll(".tt").forEach((elem) => {
-    let loadingText = elem.closest("tr[id]:has(span.seedmed)") ? "…" : "";
+    let loadingText = isTracker || elem.closest("tr[id]:has(span.seedmed)") ? "…" : "";
     let newTd = document.createElement("td");
     newTd.className = "cainr-rutracker-rating-imdb";
     newTd.textContent = loadingText;
+    newTd.style.backgroundColor = '#eee'
     elem.parentNode.insertBefore(newTd, elem.nextSibling);
   });
 
   for (const threadElement of threadLinks) {
-    let threadId = threadElement.id.replace(/[^\d]+/, "");
-    let prefix = "imdb";
+    let threadId;
+    if (isForum) {
+      threadId = threadElement.id.replace(/[^\d]+/, "");
+    } else if (isTracker) {
+      threadId = threadElement.href?.split('=').pop();
+    }
+    if (!threadId) continue;
+    let prefix = "tmdb";
     let composedKey = prefix + threadId;
     await getMovieData(threadElement, composedKey, rating => updateRating(threadElement, rating));
   }
@@ -181,6 +202,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         const numericRating = +rating;
         const hasScore = Number.isFinite(numericRating);
         const scoreColor = hasScore ? colors[Math.round(numericRating)] : '#999';
+        nextSibling.style.backgroundColor = `color-mix(in oklab, ${scoreColor}, #fff 75%)`
         nextSibling.innerHTML = `<span style="color:${scoreColor}">${rating}</span>`;
       }
     }
