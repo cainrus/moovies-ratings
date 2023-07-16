@@ -1,6 +1,19 @@
+
 .cainr-rutracker-rating-imdb {
     text-align: center;
     /* same size as next col */
     font-size: 11px;
     min-width: 40px;
+    background-color: #eee
+
 }
+
+html[data-darkreader-scheme="dark"] .cainr-rutracker-rating-imdb [data-darkreader-inline-color] {
+    filter: invert();
+
+}
+html[data-darkreader-scheme="dark"] .cainr-rutracker-rating-imdb {
+    filter: invert();
+    background-color: #777
+}
+

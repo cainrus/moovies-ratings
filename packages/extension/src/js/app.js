@@ -147,6 +147,45 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
   };
 
+  const list = [];
+  function collectTrackerIds(startNode, skipIdList) {
+    let node = startNode;
+    let list = [];
+    while(node) {
+
+      if (node.tagName === 'OPTION') {
+        const id = node.id.slice(3);
+        const isRoot = node.classList.contains('root_forum');
+        if (skipIdList.includes(id)) {
+          console.log(id)
+          if (isRoot) {
+            node = document.querySelector(`#fs-${id} + * + .root_forum`);
+
+          } else {
+            node = node.nextSibling;
+          }
+          console.log(node)
+          continue;
+        }
+        if (isRoot) {
+          node = node.nextSibling;
+          continue;
+        }
+
+        list.push(id);
+      }
+      node = node.nextSibling;
+    }
+    return list;
+  }
+
+  const skipList = [
+      '511' /*theater*/,
+      '921' /*animated-series*/,
+      '33' /*anime*/,
+    ];
+
+
   const url = new URL(location.href);
   const isForum = url.pathname.startsWith('/forum/viewforum.php');
   const isTracker = !isForum && url.pathname.startsWith('/forum/tracker.php');
@@ -157,13 +196,34 @@ document.addEventListener("DOMContentLoaded", async function () {
   if (isForum) {
     // Check parent forum is movies forum.
     if (!document.querySelector(".nav.nav-top a")?.href.includes("index.php?c=2")) return;
+
+    const isAllowed = Array.from(
+      document.querySelectorAll('.nav-top a')
+    ).map(a => a.href.split('=').pop()).every(id => {
+      return !skipList.includes(id)
+    })
+
+    if (!isAllowed) return;
+
     headerTh = document.querySelector('th.vf-col-t-title');
     threadLinks = document.querySelectorAll("tr[id]:has(span.seedmed) .torTopic > .torTopic");
   } else if (isTracker) {
-    // Wait until forum is loaded.
-    // await new Promise(resolve => setTimeout(resolve, 2000));
+
+
+    const idList = collectTrackerIds(document.querySelector('#fs-22'), skipList);
+    threadLinks = Array.from(document.querySelectorAll('.f-name-col')).filter(fCol => {
+      const href = fCol.querySelector('a').href;
+      return idList.some(id => {
+        return href.endsWith(`=${id}`)
+      })
+    }).map(fCol => fCol.nextElementSibling.querySelector('.tt-text'));
+    if (!threadLinks.length ) {
+      return;
+    }
     headerTh = document.querySelector('.forumline th:nth-child(4)')
-    threadLinks = document.querySelectorAll('.tt-text');
+
+  } else {
+    return;
   }
 
 
@@ -177,7 +237,6 @@ document.addEventListener("DOMContentLoaded", async function () {
     let newTd = document.createElement("td");
     newTd.className = "cainr-rutracker-rating-imdb";
     newTd.textContent = loadingText;
-    newTd.style.backgroundColor = '#eee'
     elem.parentNode.insertBefore(newTd, elem.nextSibling);
   });
 
