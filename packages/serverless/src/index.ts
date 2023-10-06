@@ -18,17 +18,20 @@ function parseSearches(payload: string | null) {
     return searches;
 }
 
+const latency = 1000;
+
 export const handler = async (event: APIGatewayEvent, context: Context) => {
     context.callbackWaitsForEmptyEventLoop = false;
 
     try {
         const searches = parseSearches(event.body)
-        const entries = await withTimeout(loadRatings(getDBClient(), searches), 500, 'cache:load');
+        const entries = await withTimeout(loadRatings(getDBClient(), searches), latency, 'cache:load');
         let newRatings: Record<string, number> = {};
         const result = await entries.reduce(async (acc, [name, score]) => {
             if (score === undefined) {
                 try {
-                    const found = await withTimeout(handleSearch(name), 500, 'fetch:rating');
+                    const found = await handleSearch(name);
+                    console.debug('Fetched score', found, 'for', name);
                     if (found) {
                         newRatings[name] = found;
                     }
@@ -41,7 +44,7 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
             return [...await acc, score];
         }, Promise.resolve([] as Optional<number>[]));
         if (Object.keys(newRatings).length) {
-            await withTimeout(saveRatings(getDBClient(), newRatings), 500, 'cache:save');
+            await withTimeout(saveRatings(getDBClient(), newRatings), latency, 'cache:save');
         }
         return createSuccessResponse(result);
     } catch (error) {

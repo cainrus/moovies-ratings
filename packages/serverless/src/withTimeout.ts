@@ -6,6 +6,8 @@ export default function withTimeout<T>(promise: Promise<T>, ms: number, operatio
     }, ms);
   });
 
-  return Promise.race<T>([promise, timeoutPromise])
-    .finally(() => clearTimeout(timeoutId));
+  return Promise.race<T>([
+    promise.finally(() => clearTimeout(timeoutId)),
+    timeoutPromise
+  ]);
 }

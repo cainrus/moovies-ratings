@@ -8,7 +8,13 @@ export default function parseMovieDescription(description: string): ParsedMovieD
     const castIndexStart = description.indexOf('(');
     if (castIndexStart === -1) throw new Error("Expected '(' in movie description but it was not found.");
 
-    const moovieMetaIndexStart = description.indexOf('[');
+    let moovieMetaIndexStart = 0;
+    do  {
+        moovieMetaIndexStart = description.indexOf('[', moovieMetaIndexStart)
+        // Check next char is numeric.
+        if (Number.isFinite(Number(description.charAt(moovieMetaIndexStart + 1)))) break;
+    } while (moovieMetaIndexStart !== -1)
+
     if (moovieMetaIndexStart === -1) throw new Error("Expected '[' in movie description but it was not found.");
 
     const moovieMetaIndexEnd = description.indexOf(']', moovieMetaIndexStart);

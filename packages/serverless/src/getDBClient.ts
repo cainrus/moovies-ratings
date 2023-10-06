@@ -6,7 +6,7 @@ export const getDBClient = (): DynamoDBClient => {
     if (!client) {
         const region = process.env.DYNAMO_DB_REGION;
         assert(region, 'DYNAMO_DB_REGION environment variable is not set');
-        client = new DynamoDBClient({region: 'us-east-1'});
+        client = new DynamoDBClient({region: process.env.DYNAMO_DB_REGION});
     }
     return client;
 }
