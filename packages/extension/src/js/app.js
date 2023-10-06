@@ -253,22 +253,30 @@ document.addEventListener("DOMContentLoaded", async function () {
       searchQueries.push(movieTitle);
     }
 
-    await fetch(apiEndpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({version, searches: searchQueries})
-    })
-      .then(response => response.json())
-      .then(async ({ratings}) => {
-        ratings.forEach(({rating, error}, index) => {
-          updateRating(threadLinks[index], rating ?? 'error')
-        });
+    const batchSize = 10;
+    const batches = [];
+    while (searchQueries.length) {
+      batches.push(searchQueries.splice(0, batchSize));
+    }
+
+    for await (const batch of batches) {
+      await fetch(apiEndpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({version, searches: batch})
       })
-      .catch(error => {
-        console.error(`Fetch error: ${error}`);
-      });
+        .then(response => response.json())
+        .then(async ({ratings}) => {
+          ratings.forEach(({rating, error}, index) => {
+            updateRating(threadLinks[index], rating ?? 'error')
+          });
+        })
+        .catch(error => {
+          console.error(`Fetch error: ${error}`);
+        });
+    }
   }
 
   await getAllThreadElements(threadLinks);
