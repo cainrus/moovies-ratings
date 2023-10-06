@@ -36,12 +36,12 @@ function ensureNumber(value: unknown): number {
     if (typeof value === 'number') {
         return value;
     }
-    throw new Error('Expected number');
+    throw new Error(`Expected number, got ${value} (${typeof value})`);
 }
 
 function ensureString(value: unknown): string {
     if (typeof value === 'string') {
         return value;
     }
-    throw new Error('Expected string');
+    throw new Error(`Expected string, got ${value} (${typeof value})`);
 }
