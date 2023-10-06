@@ -2,4 +2,4 @@
 
 set -e
 
-aws lambda get-function --function-name myFunctionName --query 'Code.Location' | xargs wget -O dist/bundle.zip && unzip dist/bundle.zip -d dist
+aws lambda get-function --function-name mooRatings --query 'Code.Location' | xargs wget -O dist/bundle.zip && unzip dist/bundle.zip -d dist

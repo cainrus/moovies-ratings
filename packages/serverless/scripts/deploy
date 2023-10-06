@@ -4,4 +4,4 @@ set -e
 
 cd dist;
 zip -r bundle.zip .
-aws lambda update-function-code --function-name myFunctionName --zip-file fileb://bundle.zip
+aws lambda update-function-code --function-name mooRatings --zip-file fileb://bundle.zip

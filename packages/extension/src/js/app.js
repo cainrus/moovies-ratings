@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", async function () {
-  const apiEndpoint = 'https://j1r5p36fi5.execute-api.eu-north-1.amazonaws.com/';
-
+  const apiEndpoint = 'https://tlasvhyhqdxsmvbmbrjg7gxtay0mxcxs.lambda-url.eu-north-1.on.aws/';
+  const version = 1;
   const colors = [
     "#460000",
     "#8B0000",
@@ -14,8 +14,6 @@ document.addEventListener("DOMContentLoaded", async function () {
     "#008B8B",
     "#00468B"
   ];
-
-
 
 
   class IndexedDataBase {
@@ -148,10 +146,11 @@ document.addEventListener("DOMContentLoaded", async function () {
   };
 
   const list = [];
+
   function collectTrackerIds(startNode, skipIdList) {
     let node = startNode;
     let list = [];
-    while(node) {
+    while (node) {
 
       if (node.tagName === 'OPTION') {
         const id = node.id.slice(3);
@@ -180,10 +179,10 @@ document.addEventListener("DOMContentLoaded", async function () {
   }
 
   const skipList = [
-      '511' /*theater*/,
-      '921' /*animated-series*/,
-      '33' /*anime*/,
-    ];
+    '511' /*theater*/,
+    '921' /*animated-series*/,
+    '33' /*anime*/,
+  ];
 
 
   const url = new URL(location.href);
@@ -217,7 +216,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         return href.endsWith(`=${id}`)
       })
     }).map(fCol => fCol.nextElementSibling.querySelector('.tt-text'));
-    if (!threadLinks.length ) {
+    if (!threadLinks.length) {
       return;
     }
     headerTh = document.querySelector('.forumline th:nth-child(4)')
@@ -240,18 +239,39 @@ document.addEventListener("DOMContentLoaded", async function () {
     elem.parentNode.insertBefore(newTd, elem.nextSibling);
   });
 
-  for (const threadElement of threadLinks) {
-    let threadId;
-    if (isForum) {
-      threadId = threadElement.id.replace(/[^\d]+/, "");
-    } else if (isTracker) {
-      threadId = threadElement.href?.split('=').pop();
+  const getAllThreadElements = async (threadLinks) => {
+    const searchQueries = [];
+    for (const threadElement of threadLinks) {
+      let threadId;
+      if (isForum) {
+        threadId = threadElement.id.replace(/[^\d]+/, "");
+      } else if (isTracker) {
+        threadId = threadElement.href?.split('=').pop();
+      }
+      if (!threadId) continue;
+      let movieTitle = threadElement.innerText.trim();
+      searchQueries.push(movieTitle);
     }
-    if (!threadId) continue;
-    let prefix = "tmdb";
-    let composedKey = prefix + threadId;
-    await getMovieData(threadElement, composedKey, rating => updateRating(threadElement, rating));
+
+    await fetch(apiEndpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({version, searches: searchQueries})
+    })
+      .then(response => response.json())
+      .then(async ({ratings}) => {
+        ratings.forEach(({rating, error}, index) => {
+          updateRating(threadLinks[index], rating ?? 'error')
+        });
+      })
+      .catch(error => {
+        console.error(`Fetch error: ${error}`);
+      });
   }
+
+  await getAllThreadElements(threadLinks);
 
   function updateRating(element, rating) {
     let parentElement = element.closest('.tt');
@@ -265,5 +285,15 @@ document.addEventListener("DOMContentLoaded", async function () {
         nextSibling.innerHTML = `<span style="color:${scoreColor}">${rating}</span>`;
       }
     }
+  }
+
+  function debounce(func, timeout = 50) {
+    let timer;
+    return (...args) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        func.apply(this, args);
+      }, timeout);
+    };
   }
 })

@@ -7,6 +7,14 @@ module.exports = {
   resolve: {
     extensions: ['.ts', '.js'],
   },
+  externals: function (context, request, callback) {
+    if (
+      request.startsWith('@aws-sdk/')
+    ) {
+      return callback(null, 'commonjs ' + request)
+    }
+    callback()
+  },
   output: {
     clean: true,
     filename: 'index.js',
