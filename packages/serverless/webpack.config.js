@@ -7,7 +7,7 @@ module.exports = {
   resolve: {
     extensions: ['.ts', '.js'],
   },
-  externals: function (context, request, callback) {
+  externals: function ({context, request}, callback) {
     if (
       request.startsWith('@aws-sdk/')
     ) {

@@ -5,7 +5,7 @@ export async function loadRatings(client: DynamoDBClient, list:  string[]): Prom
     const entries: [string, number][] = data.Responses?.MooRatings
         ?.map<[string, number]>((item) => ([
             ensureString(item.id?.S),
-            ensureNumber(item.score?.N),
+            ensureNumber(Number(item.score?.N)),
         ])) ?? [];
     const dict: Record<string, number> = Object.fromEntries(entries);
     return list.map<[string, number | undefined]>((name) => {

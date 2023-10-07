@@ -2,9 +2,6 @@
   "name": "@movies-ratings/serverless",
   "version": "1.0.0",
   "main": "dist/index.js",
-  "dependencies": {
-    "dynamodb-toolbox": "^0.8.5"
-  },
   "bundledDependencies": true,
   "scripts": {
     "deploy": "yarn test && yarn build && scripts/deploy",

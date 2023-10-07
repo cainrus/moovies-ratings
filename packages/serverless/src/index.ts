@@ -18,7 +18,7 @@ function parseSearches(payload: string | null) {
     return searches;
 }
 
-const latency = 1000;
+const latency = 800;
 
 export const handler = async (event: APIGatewayEvent, context: Context) => {
     context.callbackWaitsForEmptyEventLoop = false;
@@ -30,6 +30,7 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
         const result = await entries.reduce(async (acc, [name, score]) => {
             if (score === undefined) {
                 try {
+                    console.debug('Fetching score for', name);
                     const found = await handleSearch(name);
                     console.debug('Fetched score', found, 'for', name);
                     if (found) {
@@ -49,6 +50,9 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
         return createSuccessResponse(result);
     } catch (error) {
         console.error(`Error handling search`, error);
+        if (process.env.NODE_ENV !== 'production' && error instanceof Error) {
+            return createErrorResponse(error);
+        }
         return createErrorResponse();
     }
 };
