@@ -248,9 +248,10 @@ document.addEventListener("DOMContentLoaded", async function () {
       } else if (isTracker) {
         threadId = threadElement.href?.split('=').pop();
       }
+      console.log('threadId', threadId)
       if (!threadId) continue;
       let movieTitle = threadElement.innerText.trim();
-      searchQueries.push(movieTitle);
+      searchQueries.push([movieTitle, threadElement]);
     }
 
     let batchSize = 5;
@@ -266,12 +267,12 @@ document.addEventListener("DOMContentLoaded", async function () {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({version, searches: batch})
+        body: JSON.stringify({version, searches: batch.map(([search]) => search)})
       })
         .then(response => response.json())
         .then(async (ratings) => {
           ratings.forEach((rating, index) => {
-            updateRating(threadLinks[offset + index], rating ?? '…')
+            updateRating(batch[index][1], rating > 0 ? rating : '…')
           });
         })
         .catch(error => {
