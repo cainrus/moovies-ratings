@@ -42,10 +42,14 @@ process.on('uncaughtException', (err) => {
 
 
 setTimeout(async () => {
+  const now = Date.now();
   console.log('result', await handler({
-    queryStringParameters: {
-      search: 'Феномен / Phenomenon (Джон Тёртелтауб / Jon Turteltaub) [1996, США, фэнтези, мелодрама, драма, HDTV 1080i]',
-    }
-  }, {}))
+    body: JSON.stringify({
+      searches: ["Ванильное небо / Vanilla Sky (Кэмерон Кроу / Cameron Crowe) [US Paramount Presents] [2001, США, Испания, драма, фантастика, BDRemux 1080p] Dub (R5 Netflix) + 5x MVO (Карусель, Астра-Медиа, ТНТ) + MVO Ukr (Новий канал) + DVO (DDV) + DVO Ukr (К1) + 2x AVO + 4x VO + Sub (Rus, Ukr, Eng) + Original Eng"],
+    })
+  }, {}));
+  console.log('Result in', Date.now() - now);
+  redisProcess.kill(0);
+  process.exit(0);
 }, 2000)
 

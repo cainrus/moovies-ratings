@@ -1,4 +1,5 @@
 import { BatchGetItemCommand, DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { hash } from "./hash";
 
 export async function loadRatings(client: DynamoDBClient, list:  string[]): Promise<[string, number | undefined][]> {
     const data = await client.send(new BatchGetItemCommand(getParams(list)));
@@ -24,7 +25,7 @@ function getParams(list: string[]) {
         RequestItems: {
             MooRatings: {
                 Keys: list.map(id => ({
-                    "id": { S: id },
+                    "id": { S: String(hash(id)) },
                 })),
                 ProjectionExpression: 'id,score'
             }

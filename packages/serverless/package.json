@@ -8,8 +8,11 @@
     "test": "tsc --noEmit",
     "fetch": "scripts/fetch",
     "build": "webpack --mode production",
-    "test:dev": "dotenv -e .env -- ts-node ./src/run.ts ./src/index.ts",
+    "test:dev": " dotenv -e .env -- ts-node ./src/run.ts ./src/index.ts",
     "test:build": "dotenv -e .env -- NODE_ENV=production ts-node ./src/run.ts ./dist/index.js"
+  },
+  "dependencies": {
+    "aws-xray-sdk": "^3.5.2"
   },
   "sideEffects": false,
   "devDependencies": {
