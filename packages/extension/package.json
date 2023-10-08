@@ -1,6 +1,6 @@
 {
   "name": "@movies-ratings/extension",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "scripts": {
     "build": "mkdir -p dist && cd src && ls ../dist/bundle.$npm_package_version.zip && exit 1 || zip -r ../dist/bundle.$npm_package_version.zip ."
   }

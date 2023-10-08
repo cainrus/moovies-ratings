@@ -97,54 +97,6 @@ document.addEventListener("DOMContentLoaded", async function () {
   const cachedRating = {};
   const callbackMapping = {};
 
-  const getMovieData = async function (threadElement, movieKey, callback) {
-    let storedRating = await indexedDataBase.get(movieKey);
-
-    if (storedRating === null) {
-      let movieTitle = threadElement.innerText.trim();
-
-      await fetch(`${apiEndpoint}?search=${encodeURIComponent(movieTitle)}`)
-        .then(response => response.json())
-        .then(response => {
-          let resolvedRating;
-          if (response.vote) {
-            resolvedRating = response.vote.toString();
-          } else if (response.error) {
-            console.warn(`Error fetching movie data: ${response.error}`);
-            resolvedRating = "N/A";
-          }
-
-          if (!resolvedRating) {
-            indexedDataBase.set(movieKey, "");
-            callback("N/A");
-            return;
-          }
-
-          let isNewTitle = !titleElementMapping[movieTitle];
-          if (isNewTitle) titleElementMapping[movieTitle] = [];
-          titleElementMapping[movieTitle].push(threadElement);
-
-          if (!callbackMapping[movieTitle]) callbackMapping[movieTitle] = [];
-          callbackMapping[movieTitle].push(callback);
-
-          if (isNewTitle && !cachedRating[movieTitle]) {
-            indexedDataBase.set(movieKey, resolvedRating);
-            callbackMapping[movieTitle].forEach(function (cb) {
-              cb(resolvedRating);
-            });
-          }
-        })
-        .catch(error => {
-          console.error(`Fetch error: ${error}`);
-          callback(null);
-        });
-    } else if (!!storedRating) {
-      callback(storedRating);
-    } else {
-      callback("N/A");
-    }
-  };
-
   const list = [];
 
   function collectTrackerIds(startNode, skipIdList) {
@@ -248,10 +200,15 @@ document.addEventListener("DOMContentLoaded", async function () {
       } else if (isTracker) {
         threadId = threadElement.href?.split('=').pop();
       }
-      console.log('threadId', threadId)
       if (!threadId) continue;
       let movieTitle = threadElement.innerText.trim();
-      searchQueries.push([movieTitle, threadElement]);
+      let storedRating = await indexedDataBase.get(movieTitle);
+      debugger;
+      if (storedRating === null) {
+        searchQueries.push([movieTitle, threadElement]);
+      } else {
+        updateRating(threadElement, normalizeRating(storedRating))
+      }
     }
 
     let batchSize = 5;
@@ -272,13 +229,18 @@ document.addEventListener("DOMContentLoaded", async function () {
         .then(response => response.json())
         .then(async (ratings) => {
           ratings.forEach((rating, index) => {
-            updateRating(batch[index][1], rating > 0 ? rating : '…')
+            indexedDataBase.set(batch[index][0], rating)
+            updateRating(batch[index][1], normalizeRating(rating))
           });
         })
         .catch(error => {
           console.error(`Fetch error: ${error}`);
         });
     }
+  }
+
+  function normalizeRating(rating) {
+    return rating > 0 ? rating : '…';
   }
 
   await getAllThreadElements(threadLinks);
