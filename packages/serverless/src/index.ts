@@ -6,11 +6,10 @@ import {getDBClient} from "./getDBClient";
 import createSuccessResponse from "./createSuccessResponse";
 import createErrorResponse from "./createErrorResponse";
 import withTimeout from "./withTimeout";
-import reduceResults from "./reduceResults";
-import parseSearch from "./parseSearch";
-import callApi from "./callApi";
 import { loadRatings } from './loadRating';
 import { saveRatings } from './saveRatings';
+import { handleSearch } from './handleSearch';
+import { MovieDescriptionParser } from './MovieDescriptionParser';
 
 type Optional<T> = T | undefined;
 
@@ -36,7 +35,8 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
             if (score === undefined) {
                 try {
                     console.debug('Fetching score for', name);
-                    const found = await tracePromise(handleSearch(name), 'fetch-score');
+                    const movieDescriptionParser =  new MovieDescriptionParser(name);
+                    const found = await tracePromise(handleSearch(name, movieDescriptionParser), 'fetch-score');
                     console.debug('Fetched score', found, 'for', name);
                     newRatings[hash(name)] = found;
                     return [...await acc, found];
@@ -59,24 +59,3 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
         return createErrorResponse(error);
     }
 };
-
-async function handleSearch(search: string): Promise<number> {
-    const {
-        year,
-        title,
-        getGenres,
-    } = parseSearch(search);
-
-    const results = await callApi({
-        year,
-        title,
-    });
-
-    const searchResult = reduceResults(results, {title, year, getGenres})
-
-    if (!searchResult) {
-        throw new Error('Unable to get search result');
-    }
-
-    return searchResult.vote_average;
-}

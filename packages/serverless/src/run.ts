@@ -9,25 +9,9 @@ dotenv.config()
 
 const { handler } = require(resolve(process.argv[2]))
 
-
-const redisProcess = spawn('redis-server');
-
-redisProcess.stdout.on('data', (data) => {
-  console.log(`stdout: ${data}`);
-});
-
-redisProcess.stderr.on('data', (data) => {
-  console.error(`stderr: ${data}`);
-});
-
-redisProcess.on('close', (code) => {
-  console.log(`child process exited with code ${code}`);
-});
-
 // Handle the cleaning up when the process exits
 process.on('exit', () => {
   console.log('handling `exit` signal...')
-  redisProcess.kill(); // this will stop the redis server
 });
 
 // Also handle other ways the process could end
@@ -45,11 +29,16 @@ setTimeout(async () => {
   const now = Date.now();
   console.log('result', await handler({
     body: JSON.stringify({
-      searches: ["Ванильное небо / Vanilla Sky (Кэмерон Кроу / Cameron Crowe) [US Paramount Presents] [2001, США, Испания, драма, фантастика, BDRemux 1080p] Dub (R5 Netflix) + 5x MVO (Карусель, Астра-Медиа, ТНТ) + MVO Ukr (Новий канал) + DVO (DDV) + DVO Ukr (К1) + 2x AVO + 4x VO + Sub (Rus, Ukr, Eng) + Original Eng"],
+      searches: [
+        // "Барби / Barbie (Грета Гервиг / Greta Gerwig) [2023, США, Великобритания, комедия, приключения, фэнтези, WEBRip 1080p] Dub + 2x MVO (TVShows, LostFilm) + Dub (Ukr) + Original (Eng) + Sub (Rus, Eng, Heb)",
+        // "Рептилии / Reptile (Грант Сингер / Grant Singer) [2023, США, детектив, триллер, драма, криминал, WEB-DL 1080p] MVO (Jaskier) + Dub Ukr + Sub (Rus, Ukr, Eng etc.) + Original Eng",
+        // "Операция «Фортуна»: Искусство побеждать / Operation Fortune: Ruse de Guerre (Гай Ричи / Guy Ritchie) [2022, Великобритания, США, Боевик, комедия, BDRip 1080p] Dub (CPI Films) + 2х MVO (Jaskier, TVShows) + VO (Есарев) + Original (Eng) + Sub (rus, eng)",
+        // "Вечные / Eternals (Хлоя Чжао / Chloé Zhao) [2021, США, фантастика, фэнтези, боевик, приключения, WEB-DL 1080p] MVO (HDRezka Studio) + Original (Eng) + Sub (Rus, Eng)",
+        "Добыча / Prey (Дэн Трахтенберг / Dan Trachtenberg) [2022, США, Ужасы, фантастика, боевик, BDRip 1080p] 2x Dub + 3x MVO + AVO + VO + Original (Eng) + Sub (rus, eng)",
+      ],
     })
   }, {}));
   console.log('Result in', Date.now() - now);
-  redisProcess.kill(0);
   process.exit(0);
 }, 2000)
 

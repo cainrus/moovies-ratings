@@ -1,25 +1,28 @@
+import {Payload} from "./Payload";
 import {isObject} from "./guards/isObject";
 import createOptions from "./createOptions";
-import makeRequest from "./makeRequest";
 import withTimeout from "./withTimeout";
 import {assert} from "./guards/assert";
 import {isMovieSearchResults} from "./guards/isMovieSearchResults";
 
 
-export default async function callApi({year, title}: { year: string, title: string }) {
+export default async function callApi(payload: Payload) {
+    const [url, options] = createOptions(payload);
     const abortController = new AbortController()
-    const options = createOptions({
-        year,
-        title,
-    });
-
-    const response = await withTimeout(fetch(...options).then(response => response.json()), {
+    const response = await withTimeout(
+        fetch(url, { ...options, signal: abortController.signal }), {
         timeout: 1000,
         id: 'api:request',
-        clean: () => void abortController.abort()
+        onTimeout: () => {
+            void abortController.abort()
+        }
     });
-    assert(isObject(response))
-    const results = response.results;
-    assert(isMovieSearchResults(results), 'Unexpected response from API: ' + JSON.stringify(results))
+
+    const json = await response.json();
+    assert(isObject(json))
+    const results = json.results;
+    assert(isMovieSearchResults(results), 'Unexpected response from API: ' + JSON.stringify(results), { Error: MovieSearchError })
     return results;
 }
+
+export class MovieSearchError extends Error {}

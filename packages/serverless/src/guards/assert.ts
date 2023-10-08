@@ -1,3 +1,6 @@
-export function assert(condition: unknown, msg?: string): asserts condition {
-    if (condition === false) throw new Error(msg)
+export function assert(condition: unknown, msg?: string, options: { Error?: new ()=>Error } = {}): asserts condition {
+    if (condition === false) {
+        const Err = options?.Error || Error;
+        throw new Err(msg)
+    }
 }

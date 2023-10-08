@@ -1,11 +1,11 @@
 
 
-import type {MovieSearchResult} from "./types/MovieSearchResult";
-import {ParsedMovieDescription} from "./types/ParsedMovieDescription";
+import {MovieDescriptionParser} from './MovieDescriptionParser';
+import type {MovieSearchResult} from './types/MovieSearchResult';
 
 export default function reduceResults(
     results: MovieSearchResult[],
-    {title, getGenres, year}: ParsedMovieDescription
+    movieDescriptionParser: MovieDescriptionParser
 ): undefined | MovieSearchResult {
     const recordsCount = results.length;
     if (results.length <= 1) {
@@ -13,6 +13,7 @@ export default function reduceResults(
     }
 
     // Filtering based on title match
+    const title = movieDescriptionParser.getTitle()
     const titleLowCase = title.toLowerCase();
     results = results.filter(item => item.original_title.toLowerCase() === titleLowCase);
     if (results.length <= 1) {
@@ -20,16 +21,15 @@ export default function reduceResults(
     }
 
     // Filtering based on genre match
-    const genres = getGenres();
+    const genres = movieDescriptionParser.getGenres();
     results = results.filter((item) => genres.every((genre) => item.genre_ids.includes(genre)));
     if (results.length <= 1) {
         return results[0];
     }
 
-    console.log('Filtered items based on title and genre match: ', results);
-
     // Filtering based on year match
-    results = results.filter((item) => item.release_date.startsWith(year));
+    const year = movieDescriptionParser.getYear()
+    results = results.filter((item) => !item.release_date || item.release_date.startsWith(year));
 
     // Throwing an error if we still have more than one result after all filters
     if (results.length > 1) {

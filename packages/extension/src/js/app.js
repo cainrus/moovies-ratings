@@ -253,13 +253,14 @@ document.addEventListener("DOMContentLoaded", async function () {
       searchQueries.push(movieTitle);
     }
 
-    const batchSize = 10;
+    let batchSize = 5;
     const batches = [];
     while (searchQueries.length) {
       batches.push(searchQueries.splice(0, batchSize));
     }
 
     for await (const batch of batches) {
+      const offset = batches.indexOf(batch) * batch.length;
       await fetch(apiEndpoint, {
         method: "POST",
         headers: {
@@ -268,9 +269,9 @@ document.addEventListener("DOMContentLoaded", async function () {
         body: JSON.stringify({version, searches: batch})
       })
         .then(response => response.json())
-        .then(async ({ratings}) => {
-          ratings.forEach(({rating, error}, index) => {
-            updateRating(threadLinks[index], rating ?? 'error')
+        .then(async (ratings) => {
+          ratings.forEach((rating, index) => {
+            updateRating(threadLinks[offset + index], rating ?? '…')
           });
         })
         .catch(error => {
@@ -287,7 +288,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       let nextSibling = parentElement.nextElementSibling;
       if (nextSibling && nextSibling.classList.contains('cainr-rutracker-rating-imdb')) {
         const numericRating = +rating;
-        const hasScore = Number.isFinite(numericRating);
+        const hasScore = numericRating > 0 && Number.isFinite(numericRating);
         const scoreColor = hasScore ? colors[Math.round(numericRating)] : '#999';
         nextSibling.style.backgroundColor = `color-mix(in oklab, ${scoreColor}, #fff 75%)`
         nextSibling.innerHTML = `<span style="color:${scoreColor}">${rating}</span>`;
